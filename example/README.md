@@ -1,5 +1,5 @@
-# Running xApp example in Docker  
-###
+# Running xApp example in Docker
+***
 ```
 #Build an image from a Dockerfile
 docker build -t ping:latest -f  Dockerfile-Ping . 
