@@ -177,25 +177,25 @@ def entry(self):
 
 xapp = Xapp(entrypoint=entry, rmr_port=4564, use_fake_sdl=True)
 """
-    Represents a generic Xapp where the client provides a single function
-    for the framework to call at startup time (instead of providing callback
-    functions by message type). The Xapp writer must implement and provide a
-    function with a loop-forever construct similar to the `run` function in
-    the `RMRXapp` class.  That function should poll to retrieve RMR messages
-    and dispatch them appropriately, poll for configuration changes, etc.
-    
-    Xapp(self, entrypoint, rmr_port=4562, rmr_wait_for_ready=True, use_fake_sdl=False)
-    Parameters
-    ----------
-    entrypoint: function
-        This function is called when the Xapp class's run method is invoked.
-        The function signature must be just function(self)
-    rmr_port: integer (optional, default is 4562)
-        Initialize RMR to listen on this port
-    rmr_wait_for_ready: boolean (optional, default is True)
-        Wait for RMR to signal ready before starting the dispatch loop
-    use_fake_sdl: boolean (optional, default is False)
-        Use an in-memory store instead of the real SDL service
+Represents a generic Xapp where the client provides a single function
+for the framework to call at startup time (instead of providing callback
+functions by message type). The Xapp writer must implement and provide a
+function with a loop-forever construct similar to the `run` function in
+the `RMRXapp` class.  That function should poll to retrieve RMR messages
+and dispatch them appropriately, poll for configuration changes, etc.
+
+Xapp(self, entrypoint, rmr_port=4562, rmr_wait_for_ready=True, use_fake_sdl=False)
+Parameters
+----------
+entrypoint: function
+    This function is called when the Xapp class's run method is invoked.
+    The function signature must be just function(self)
+rmr_port: integer (optional, default is 4562)
+    Initialize RMR to listen on this port
+rmr_wait_for_ready: boolean (optional, default is True)
+    Wait for RMR to signal ready before starting the dispatch loop
+use_fake_sdl: boolean (optional, default is False)
+    Use an in-memory store instead of the real SDL service
 """
 
 xapp.run()
