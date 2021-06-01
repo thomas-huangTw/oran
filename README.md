@@ -87,3 +87,7 @@ $ kubectl get pods -n ricxapp
 
 $ kubectl logs -n ricxapp <name of POD retrieved from statement above>
 ```
+
+#### Reference
+* https://wiki.o-ran-sc.org/display/GS/Near+Realtime+RIC+Installation
+* https://www.o-ran.org/software
