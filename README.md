@@ -1,62 +1,89 @@
-# ORAN xApp introduction
+# Near Realtime RIC. 
 ***
-The internal architecture of xApp can be divided into different parts, among which xApp includes Near Real Time RAN Intelligent Controller (Near-RT RIC) libraries and RIC Message Router (RMR) libraries.
-xApp and other Components use RMR for data exchange and communication, and stores data through Shared Data Layer (SDL).  
-
-Before establishing the Near-RT RIC system, you need to install the basic system environment including Kubernetes, Docker, RMR, SDL, E2 Node, E2 Termination, Redis database and xApp Framework, etc. This report will explain in detail how to establish the system environment and the deployment of RMR and xApp. This report will explain in detail how to establish the system environment and the deployment of RMR and xApp. For related E2 Node, E2 Termination, Redis database, and SDL information, please refer to Open Radio Access Network (O-RAN) official documents for detailed instructions.  
-
-This report explains how xApp communicates with E2 Node and how to build a basic xApp. In addition, the report also details how to use the xApp Framework and the xApp API package. The xApp Framework assembles the complex structure of RMR into a package, and the xApp API combines the complex RMR settings and Message Type into simple commands, which is beneficial to speed up the development of xApp by developers.
+Near-RT RIC is located in RAN, receiving and analyzing real-time information from RAN, combined with additional information provided by Non-RT RIC. Use machine learning model deployed by Non-RT RIC to monitor or predict changes in user connection status. According to the policies and changes set by Non-RT RIC, the RAN parameters can be adjusted to allow each user to maintain the established policy goals.
 ***
-## What is xApp?
-xApp is designed for applications running on Near-RT RIC in O-RAN architecture. The application may contain one or more microservices, and xApp can interact with the base station after adding Near-RT RIC. For example: the base station reports data to xApp, and can also control the parameter settings of the base station through Control commands, etc. The application is independent of Near-RT RIC and can be provided by any third party software. xApp can communicate with E2 Node through the Near-RT RIC Procedure defined by O-RAN, such as Subscription, Control, Indication Report, etc.
-***
-## Installation environment requirements for xApp
-1. Before using and installing xApp, you need to have a basic understanding of the Python programming language.
-Python tutorial, please refer to Python: https://docs.python.org/3/tutorial/
+## Near Realtime RIC Installation
+#### VM Minimum Requirments for RIC 
+* OS: Ubuntu 18.04 LTS (Bionic Beaver).  
+* CPU(s):  4.  
+* RAM: 16 GB.  
+* Storage: 160 GB.  
 
-In addition, in order for xApp to be deployed smoothly, the following environment settings must be adopted:
-* Execution environment: Docker and Python environment.
-* Supported programming language: Python version 3.7 or above
-* Operating system: Ubuntu 18.04 or above.
-* Communication between xApp and other components: RMR
-### Install Docker Engine
-https://docs.docker.com/engine/install/ubuntu/
-#### Installation example:
-**1. Set up the repository**  
+#### Step.1 Obtaining the Deployment Scripts and Charts
+```
+$ sudo -i
 
-Update the apt package index
-```
-$ sudo apt-get update
-```  
-Install Docker-related packages  
-```
-$ sudo apt-get install \
-       apt-transport-https \
-       ca-certificates \
-       curl \
-       gnupg \
-       lsb-release
-```
-Add Docker’s official GPG key  
-```
-$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-```  
-Add Stable version of the repository  
-```
-$ sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-```  
-**2. Install Docker Engine**  
+$ git clone http://gerrit.o-ran-sc.org/r/it/dep -b bronze
 
-Update the apt package index, and install the latest version of Docker Engine and containerd
+$ cd dep
+$ git submodule update --init --recursive --remote
 ```
-$ sudo apt-get update  
-$ sudo apt-get install docker-ce docker-ce-cli containerd.io
+#### Step.2 Generation of cloud-init Script 
 ```
-Verify that Docker Engine is installed correctly
+$ cd tools/k8s/bin
+$ ./gen-cloud-init.sh   # will generate the stack install script for what RIC needs
 ```
-$ sudo docker -v
-$ sudo docker run hello-world
+#### Note:  
+The outputted script is will be used for preparing K8 cluster for RIC deployment (k8s-1node-cloud-init-k_1_16-h_2_12-d_cur.sh)
+
+#### Step.3 Installation of Kubernetes, Helm, Docker, etc.
+```
+$ ./k8s-1node-cloud-init-k_1_16-h_2_12-d_cur.sh
+```
+#### NOTE:   
+Be patient as this takes some time to complete. Upon completion of this script, the VM will be rebooted.  You will then need to login to the VM and run sudo once again.
+```
+$ sudo -i
+
+$ kubectl get pods --all-namespaces  # There should be  9 pods running in kube-system namespace.
+```
+#### Step.4 Deploy RIC using Recipe
+```
+$ cd dep/bin
+$ ./deploy-ric-platform -f ../RECIPE_EXAMPLE/PLATFORM/example_recipe.yaml
+$ kubectl get pods -n ricplt    
+```
+#### note:  
+ERROR: Can't locate the ric-common helm package in the local repo. Please make sure that it is properly installed.  
+You just need to initialize Helm repositories with the following :
+```
+$ helm init --stable-repo-url=https://charts.helm.sh/stable --client-only
+```
+#### Step.5 Onboarding a Test xApp(HelloWorld xApp)
+```
+$ cd dep
+
+# Create the file that will contain the URL used to start the on-boarding process...
+$ echo '{ "config-file.json_url": "https://gerrit.o-ran-sc.org/r/gitweb?p=ric-app/hw.git;a=blob_plain;f=init/config-file.json;hb=HEAD" }' > onboard.hw.url
+
+# Start on-boarding process...
+
+$ curl --location --request POST "http://$(hostname):32080/onboard/api/v1/onboard/download"  --header 'Content-Type: application/json' --data-binary "@./onboard.hw.url"
+
+
+# Verify list of all on-boarded xApps...
+$ curl --location --request GET "http://$(hostname):32080/onboard/api/v1/charts"
+```
+#### Step.6 Deploy Test xApp(HelloWorld xApp)
+```
+#  Verify xApp is not running...  This may take a minute so refresh the command below
+$ kubectl get pods -n ricxapp
+
+
+
+# Call xApp Manager to deploy HelloWorld xApp...
+
+$ curl --location --request POST "http://$(hostname):32080/appmgr/ric/v1/xapps"  --header 'Content-Type: application/json'  --data-raw '{"xappName": "hwxapp"}'
+
+
+
+#  Verify xApp is running...
+
+$ kubectl get pods -n ricxapp
+
+
+
+#  View logs...
+
+$ kubectl logs -n ricxapp <name of POD retrieved from statement above>
 ```
