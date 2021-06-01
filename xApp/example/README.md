@@ -15,3 +15,5 @@ docker build -t pong:latest -f  Dockerfile-pongxApp .
 docker run -i --net=host ping:latest
 docker run -i --net=host pong:latest
 ```
+### Reference
+* https://github.com/o-ran-sc/ric-plt-xapp-frame-py
