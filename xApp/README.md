@@ -60,3 +60,6 @@ Verify that Docker Engine is installed correctly
 $ sudo docker -v
 $ sudo docker run hello-world
 ```
+#### Refernce
+* https://docs.docker.com/engine/install/ubuntu/
+* https://docs.python.org/3/tutorial/
