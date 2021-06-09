@@ -29,8 +29,8 @@ RUN apk update && apk add gcc musl-dev bash
 
 # Install
 RUN pip install ricxappframe
-COPY pong_xapp.py .
+COPY pong_xApp.py .
 
 # Run
 ENV PYTHONUNBUFFERED 1
-CMD python pong_xapp.py
+CMD python pong_xApp.py
