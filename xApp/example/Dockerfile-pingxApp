@@ -29,8 +29,8 @@ RUN apk update && apk add gcc musl-dev bash
 
 # Install
 RUN pip install ricxappframe
-COPY ping_xapp.py .
+COPY ping_xApp.py .
 
 # Run
 ENV PYTHONUNBUFFERED 1
-CMD python ping_xapp.py
+CMD python ping_xApp.py
